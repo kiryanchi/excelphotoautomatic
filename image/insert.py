@@ -35,7 +35,7 @@ def insert(folder_name, column, row, sheet):
                 print(r, '번 째 사진을 찾지 못 했습니다.')
             else:
                 sheet.add_image(img, column + str((r-1) * 19 + 2))
-                print(folder_name + '폴더의 ', r, '번 째 사진을 추가했습니다.')
+                print("'" + folder_name + "'" + ' 폴더의 ', r, '번 째 사진을 추가했습니다.')
 
 
 def insert_image(file, BASE_DIR, output='output.xlsx'):
@@ -76,8 +76,9 @@ def insert_image(file, BASE_DIR, output='output.xlsx'):
         except FileNotFoundError:
             print("\n'후' 폴더 사진 추가를 실패했습니다.\n")
             return
-
-    wb.save(output)
+        else:
+            print('\n후 폴더 사진 추가를 완료했습니다.\n')
+            wb.save(output)
 
 
 # def delete_image(file):
