@@ -10,7 +10,8 @@ import os
 '''
 FIXED_SIZE = (514.0, 335.6)
 
-def insertimg(img_name, column, row, sheet):
+
+def insertinexcel(img_name, column, row, sheet):
     try:
         img = Image(img_name)
     except FileNotFoundError:

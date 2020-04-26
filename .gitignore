@@ -4,3 +4,8 @@ build/
 venv/
 dist/
 *.spec
+Save/
+test.py
+test2.xlsx
+test2.xpa
+test_my_form.*

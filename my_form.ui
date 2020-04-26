@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1046</width>
-    <height>699</height>
+    <width>1050</width>
+    <height>732</height>
    </rect>
   </property>
   <property name="font">
@@ -18,414 +18,171 @@
   <property name="windowTitle">
    <string>엑셀 자동 작업 프로그램</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1,1,0,0">
-     <property name="spacing">
-      <number>15</number>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="4" column="11">
+    <widget class="QProgressBar" name="progress_bar">
+     <property name="minimumSize">
+      <size>
+       <width>200</width>
+       <height>20</height>
+      </size>
      </property>
-     <property name="sizeConstraint">
-      <enum>QLayout::SetMinAndMaxSize</enum>
+     <property name="maximumSize">
+      <size>
+       <width>200</width>
+       <height>20</height>
+      </size>
      </property>
-     <item>
-      <widget class="QPushButton" name="save_btn">
-       <property name="maximumSize">
-        <size>
-         <width>150</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>저장</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="fileopen_btn">
-       <property name="maximumSize">
-        <size>
-         <width>150</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>파일 열기</string>
-       </property>
-       <property name="checkable">
+     <property name="maximum">
+      <number>1</number>
+     </property>
+     <property name="value">
+      <number>0</number>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="format">
+      <string>완료</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QPushButton" name="fileopen_btn">
+     <property name="maximumSize">
+      <size>
+       <width>200</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>엑셀 파일 불러오기 (O)</string>
+     </property>
+     <property name="shortcut">
+      <string>Ctrl+O</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="11">
+    <widget class="QPushButton" name="filesave_btn">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>엑셀에 사진넣기</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="11">
+    <widget class="QPushButton" name="save_btn">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>작업 저장 (S)</string>
+     </property>
+     <property name="shortcut">
+      <string>Ctrl+S</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1" colspan="10">
+    <widget class="QLabel" name="aleart">
+     <property name="minimumSize">
+      <size>
+       <width>500</width>
+       <height>20</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>20</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <italic>false</italic>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;※경고※ 작업중인 엑셀은 끈 상태에서 진행해야함&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2" colspan="7">
+    <widget class="QLabel" name="fileopen_lbl">
+     <property name="text">
+      <string>선택된 엑셀 파일이 없습니다.</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="4" colspan="7">
+    <widget class="QLabel" name="progress_lbl">
+     <property name="minimumSize">
+      <size>
+       <width>300</width>
+       <height>20</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>20</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>진행상황</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" colspan="11">
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="0">
+      <widget class="QPushButton" name="load_btn">
+       <property name="enabled">
         <bool>false</bool>
        </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="fileopen_lbl">
        <property name="text">
-        <string>선택된 파일이 없습니다.</string>
+        <string>작업 불러오기 (L)</string>
        </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="rowlabel">
-       <property name="text">
-        <string>원하는 행 (1 ~ </string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSpinBox" name="spinBox">
-       <property name="minimumSize">
-        <size>
-         <width>70</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="minimum">
-        <number>1</number>
+       <property name="shortcut">
+        <string>Ctrl+L</string>
        </property>
       </widget>
      </item>
     </layout>
    </item>
-   <item>
-    <widget class="QTabWidget" name="tabWidget">
-     <property name="currentIndex">
-      <number>1</number>
+   <item row="2" column="1" colspan="11">
+    <widget class="QPushButton" name="reload_btn">
+     <property name="enabled">
+      <bool>false</bool>
      </property>
-     <widget class="QWidget" name="tab_4">
-      <attribute name="title">
-       <string>쪽</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout_8">
-       <item row="0" column="0">
-        <layout class="QGridLayout" name="gridLayout_7">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>작업중.. 박기현</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab">
-      <attribute name="title">
-       <string>작업 전</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout_2">
-       <item row="0" column="0">
-        <layout class="QGridLayout" name="gridLayout">
-         <item row="0" column="0" rowspan="3">
-          <widget class="QLabel" name="beforeimg_lbl">
-           <property name="minimumSize">
-            <size>
-             <width>720</width>
-             <height>480</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>전 사진</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="3">
-          <widget class="QPushButton" name="beforeimg_clear_btn">
-           <property name="maximumSize">
-            <size>
-             <width>100</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>비우기</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QPushButton" name="beforeimg_btn">
-           <property name="maximumSize">
-            <size>
-             <width>100</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>불러오기</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1" colspan="3">
-          <widget class="QListWidget" name="beforeimg_list">
-           <property name="maximumSize">
-            <size>
-             <width>300</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="dragDropMode">
-            <enum>QAbstractItemView::InternalMove</enum>
-           </property>
-           <property name="defaultDropAction">
-            <enum>Qt::LinkAction</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QPushButton" name="beforeimg_remove_btn">
-           <property name="maximumSize">
-            <size>
-             <width>100</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>삭제</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1" colspan="3">
-          <widget class="QPushButton" name="beforeimg_insert_btn">
-           <property name="maximumSize">
-            <size>
-             <width>300</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>삽입하기</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_2">
-      <attribute name="title">
-       <string>작업 후</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout_4">
-       <item row="1" column="0">
-        <layout class="QGridLayout" name="gridLayout_3">
-         <item row="0" column="1">
-          <widget class="QPushButton" name="afterimg_btn">
-           <property name="maximumSize">
-            <size>
-             <width>100</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>불러오기</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="3">
-          <widget class="QPushButton" name="afterimg_clear_btn">
-           <property name="maximumSize">
-            <size>
-             <width>100</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>비우기</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0" rowspan="3">
-          <widget class="QLabel" name="afterimg_lbl">
-           <property name="minimumSize">
-            <size>
-             <width>720</width>
-             <height>480</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>후 사진</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1" colspan="3">
-          <widget class="QListWidget" name="afterimg_list">
-           <property name="maximumSize">
-            <size>
-             <width>300</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="dragDropMode">
-            <enum>QAbstractItemView::InternalMove</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QPushButton" name="afterimg_remove_btn">
-           <property name="maximumSize">
-            <size>
-             <width>100</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>삭제</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1" colspan="3">
-          <widget class="QPushButton" name="afterimg_insert_btn">
-           <property name="maximumSize">
-            <size>
-             <width>300</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>삽입하기</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_3">
-      <attribute name="title">
-       <string>전주번호</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout_6">
-       <item row="0" column="0">
-        <layout class="QGridLayout" name="gridLayout_5">
-         <item row="0" column="0" rowspan="3">
-          <widget class="QLabel" name="polenum_lbl">
-           <property name="minimumSize">
-            <size>
-             <width>720</width>
-             <height>480</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>전주번호</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QPushButton" name="polenum_btn">
-           <property name="maximumSize">
-            <size>
-             <width>100</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>불러오기</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="3">
-          <widget class="QPushButton" name="polenum_clear_btn">
-           <property name="maximumSize">
-            <size>
-             <width>100</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>비우기</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QPushButton" name="polenum_remove_btn">
-           <property name="maximumSize">
-            <size>
-             <width>100</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>삭제</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1" colspan="3">
-          <widget class="QListWidget" name="polenum_list">
-           <property name="maximumSize">
-            <size>
-             <width>300</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="dragDropMode">
-            <enum>QAbstractItemView::InternalMove</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1" colspan="3">
-          <widget class="QPushButton" name="polenum_insert_btn">
-           <property name="maximumSize">
-            <size>
-             <width>300</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>삽입하기</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="progress_lbl">
-     <property name="font">
-      <font>
-       <family>.Apple SD Gothic NeoI</family>
-       <pointsize>23</pointsize>
-      </font>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>25</height>
+      </size>
      </property>
      <property name="text">
-      <string>작업진행창</string>
+      <string>사진 새로고침 (R)</string>
      </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="alert_lbl">
-     <property name="font">
-      <font>
-       <family>.Apple SD Gothic NeoI</family>
-       <pointsize>18</pointsize>
-       <weight>75</weight>
-       <italic>true</italic>
-       <bold>true</bold>
-       <underline>false</underline>
-       <stylestrategy>PreferDefault</stylestrategy>
-      </font>
-     </property>
-     <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#fc000a;&quot;&gt;* 경고 * 엑셀에 삽입된 사진은 직접 지워야 함&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
+     <property name="shortcut">
+      <string>Ctrl+R</string>
      </property>
     </widget>
    </item>

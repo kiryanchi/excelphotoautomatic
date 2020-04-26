@@ -1,13 +1,18 @@
 import sys
 import openpyxl
-from PyQt5.QtWidgets import QFileDialog, QApplication, QWidget
+from PyQt5.QtWidgets import QFileDialog, QApplication, QWidget, QLabel, QLayout, QHeaderView, QTableWidget, QHBoxLayout, QAbstractItemView
 from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
-from image.insert import insertimg
+from PyQt5 import QtCore
+from PyQt5.QtCore import QFile, QIODevice, QDataStream, QVariant
+import threading
+from image.insert import insertinexcel
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SAVE_DIR = BASE_DIR + '\\Save'
 form_class = uic.loadUiType("my_form.ui")[0]
+FILE_NAME = 'default'
 
 
 def setLabelText(label, text):
@@ -15,198 +20,213 @@ def setLabelText(label, text):
     label.adjustSize()
 
 
+class TableWidgetPixmap(QPixmap):
+    def __init__(self, imgpath):
+        super().__init__()
+        self.load(imgpath)
+
+
+class TableWidget(QWidget):
+    def __init__(self, imgpath, pixmap=None):
+        super().__init__()
+        self.imgpath = imgpath
+        self.lbl = QLabel()
+        self.img = TableWidgetPixmap(imgpath) if pixmap is None else pixmap
+        self.img = self.img.scaled(myWindow.table.width() // 3 - 30, 300 + 10)
+        self.lbl.setPixmap(self.img)
+        self.widget_layout = QHBoxLayout()
+        self.widget_layout.addWidget(self.lbl)
+        self.widget_layout.setSizeConstraint(QLayout.SetFixedSize)
+        self.setLayout(self.widget_layout)
+
+
+class MyTabel(QTableWidget):
+    def __init__(self):
+        super().__init__(0, 3)
+        self.setAcceptDrops(True)
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        # self.setDragDropMode(QAbstractItemView.InternalMove)
+        # self.setDefaultDropAction(QtCore.Qt.CopyAction)
+        # 테이블위젯의 헤더 크기를 조정
+        self.setAlternatingRowColors(True)
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.setMinimumSize(QtCore.QSize(990, 630))
+        self.verticalHeader().setDefaultSectionSize(330)
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        self.setHorizontalHeaderLabels(['작업 전', '작업 후', '전주 번호'])
+
+    def dragEnterEvent(self, e):
+        if e.mimeData().hasUrls:
+            e.accept()
+        else:
+            e.ignore()
+
+    def dragMoveEvent(self, e):
+        if e.mimeData().hasUrls:
+            e.accept()
+        else:
+            e.ignore()
+
+    def dropEvent(self, e):
+        e.setDropAction(QtCore.Qt.CopyAction)
+        e.accept()
+        if e.mimeData().hasUrls and FILE_NAME != "default":
+            url = e.mimeData().urls()[0]
+            url = str(url.toLocalFile())
+            if url.split('.')[-1] == 'JPG':
+                widget = self.CreateTableWidget(url)
+                row = myWindow.table.currentRow()
+                col = myWindow.table.currentColumn()
+                myWindow.table.setCellWidget(row, col, widget)
+
+    def CreateTableWidget(self, imgpath, pixmap=None):
+        widget = TableWidget(imgpath, pixmap)
+        return widget
+
+
 class WindowClass(QWidget, form_class):
-    file_name = 'default'
+    table = None
     wb = None
     sheet = None
 
     def __init__(self):
-        """
-        Widgets                 tab1                    tab2                    tab3
-        fileopen                beforeimg               afterimg                polenum
-        fileopen_btn            beforeimg_lbl           afterimg_lbl            polenum_lbl
-        fileopen_lbl            beforeimg_btn           afterimg_btn            polenum_btn
-        save_btn                beforeimg_list          afterimg_list           polenum_list
-        progress_lbl            beforeimg_insert_btn    afterimg_insert_btn     polenum_insert_btn
-        alert_lbl               beforeimg_clear_btn     afterimg_clear_btn      polenum_clear_btn
-                                beforeimg_remove_btn    afterimg_remove_btn     polenum_remove_btn
-        """
         super().__init__()
         self.setupUi(self)
-        self.saveOff()
-        # 파일 오픈
+        self.initUI()
+
+    def initUI(self):
+        # 그리드 레이아웃?
+        self.table = MyTabel()
+        self.table.setEnabled(False)
+        self.gridLayout_2.addWidget(self.table)
         self.fileopen_btn.clicked.connect(self.openExcel)
+        self.save_btn.clicked.connect(self.saveXpa)
+        self.load_btn.clicked.connect(self.loadXpa)
+        self.reload_btn.clicked.connect(self.reload)
+        self.filesave_btn.clicked.connect(self.insert)
+        # self.saveoption.setToolTip('작업과정을 사진이 포함되어 저장됩니다. 용량이 매우 커질 수 있습니다.')
 
-        # 사진 불러오기
-        self.beforeimg_btn.clicked.connect(self.openBeforePhoto)
-        self.afterimg_btn.clicked.connect(self.openAfterPhoto)
-        self.polenum_btn.clicked.connect(self.openPolePhoto)
+    def insert(self):
+        t = threading.Thread(target=self.inserting)
+        t.start()
 
-        # 사진 비우기
-        self.beforeimg_clear_btn.clicked.connect(self.clearBeforePhoto)
-        self.afterimg_clear_btn.clicked.connect(self.clearAfterPhoto)
-        self.polenum_clear_btn.clicked.connect(self.clearPolePhoto)
+    def inserting(self):
+        global FILE_NAME
+        self.progressOn()
+        column_list = ['A', 'I', 'Q']
+        for r in range(self.table.rowCount()):
+            for c in range(self.table.columnCount()):
+                if self.table.cellWidget(r, c):
+                    row = 19 * r + 2
+                    imgname = self.table.cellWidget(r, c).imgpath
+                    insertinexcel(imgname, column_list[c], row, self.sheet)
+        self.wb.save(FILE_NAME)
+        setLabelText(self.progress_lbl, '[완료] 엑셀에 사진을 넣었습니다.')
+        self.progressOff()
 
-        # 사진 삭제
-        self.beforeimg_remove_btn.clicked.connect(self.removeBeforePhoto)
-        self.afterimg_remove_btn.clicked.connect(self.removeAfterPhoto)
-        self.polenum_remove_btn.clicked.connect(self.removePolePhoto)
+    def reload(self):
+        for r in range(self.table.rowCount()):
+            for c in range(self.table.columnCount()):
+                if self.table.cellWidget(r, c):
+                    imgpath = self.table.cellWidget(r, c).imgpath
+                    widget = TableWidget(imgpath)
+                    self.table.setCellWidget(r, c, widget)
 
-        # 사진 출력
-        self.beforeimg_list.itemClicked.connect(self.viewBeforePhoto)
-        self.afterimg_list.itemClicked.connect(self.viewAfterPhoto)
-        self.polenum_list.itemClicked.connect(self.viewPolePhoto)
+    def loadExcel(self, fname):
+        global FILE_NAME
+        name = fname.split('/')[-1]
+        FILE_NAME = fname
+        # 엑셀 파일을 분석한다. openpyxl
+        self.wb = openpyxl.load_workbook(FILE_NAME)
+        try:
+            self.sheet = self.wb['작업사진']
+        except KeyError:
+            setLabelText(self.progress_lbl, "[에러 1] '작업사진' 워크시트를 열지 못 했습니다. 엑셀파일을 확인해주세요.")
+        else:
+            row = (self.sheet.max_row - 1) // 19
+            self.table.setRowCount(row)
+            setLabelText(self.fileopen_lbl, name)
+            self.save_btn.setEnabled(True)
+            self.load_btn.setEnabled(True)
+            self.reload_btn.setEnabled(True)
+            self.filesave_btn.setEnabled(True)
+            self.table.setEnabled(True)
+            setLabelText(self.progress_lbl, '[완료] 파일을 성공적으로 열었습니다.')
+        self.progressOff()
 
-        # 엑셀에 사진 삽입하기
-        self.beforeimg_insert_btn.clicked.connect(self.insertBeforePhoto)
-        self.afterimg_insert_btn.clicked.connect(self.insertAfterPhoto)
-        self.polenum_insert_btn.clicked.connect(self.insertPolePhoto)
-
-        # 저장
-        self.save_btn.clicked.connect(self.saveExcel)
-
-    # 함수들
-    def saveExcel(self):
-        self.wb.save(self.file_name)
-        setLabelText(self.progress_lbl, '[완료] 저장했습니다.')
-        self.saveOff()
-
-    # 수정 용이하게 위에서 작업
-    def insertBeforePhoto(self):
-        # default 이면 작업 X
-        if self.file_name == 'default':
-            setLabelText(self.progress_lbl, '[에러 2] 파일을 선택한 후 진행해주세요')
-            return
-        img_name = self.beforeimg_list.currentItem().text()
-        row = self.spinBox.value()
-        row = (row - 1) * 19 + 2
-        result = insertimg(img_name, 'A', row, self.sheet)
-        setLabelText(self.progress_lbl, result)
-        self.saveOn()
-
-    def insertAfterPhoto(self):
-        # default 이면 작업 X
-        if self.file_name == 'default':
-            setLabelText(self.progress_lbl, '[에러 2] 파일을 선택한 후 진행해주세요')
-            return
-        img_name = self.beforeimg_list.currentItem().text()
-        row = self.spinBox.value()
-        row = (row - 1) * 19 + 2
-        result = insertimg(img_name, 'I', row, self.sheet)
-        setLabelText(self.progress_lbl, result)
-        self.saveOn()
-
-    def insertPolePhoto(self):
-        # default 이면 작업 X
-        if self.file_name == 'default':
-            setLabelText(self.progress_lbl, '[에러 2] 파일을 선택한 후 진행해주세요')
-            return
-        img_name = self.beforeimg_list.currentItem().text()
-        row = self.spinBox.value()
-        row = (row - 1) * 19 + 2
-        result = insertimg(img_name, 'Q', row, self.sheet)
-        setLabelText(self.progress_lbl, result)
-        self.saveOn()
-
-    # 엑셀 파일 여는 함수
     def openExcel(self):
         setLabelText(self.progress_lbl, '[진행중] 파일을 여는 중...')
+        self.progressOn()
         fname = QFileDialog.getOpenFileName(self, '엑셀 파일 선택', BASE_DIR, "Excel files (*.xlsx)")
-        # print(fname)
 
         if fname[0]:
             if os.path.isfile(fname[0]):
-                name = fname[0].split('/')[-1]
-                self.file_name = fname[0]
-                # 엑셀 파일을 분석한다. openpyxl
-                self.wb = openpyxl.load_workbook(self.file_name)
-                try:
-                    self.sheet = self.wb['작업사진']
-                except KeyError:
-                    setLabelText(self.progress_lbl, "[에러 1] '작업사진' 워크시트를 열지 못 했습니다. 엑셀파일을 확인해주세요.")
-                else:
-                    row = (self.sheet.max_row - 1) // 19
-                    self.spinBox.setRange(1, row)
-                    setLabelText(self.rowlabel, '원하는 행 (1 ~ ' + str(row) + ')')
-                    setLabelText(self.fileopen_lbl, name)
-                    setLabelText(self.progress_lbl, '[완료] 파일을 성공적으로 열었습니다.')
+                t = threading.Thread(target=self.loadExcel, kwargs={'fname': fname[0]})
+                t.start()
         else:
             setLabelText(self.progress_lbl, '[에러 0] 파일이 잘못 선택됐습니다. 다시 선택해주세요')
+            self.progressOff()
 
-    # 사진 불러오는 함수들
-    def openBeforePhoto(self):
-        p_list = QFileDialog.getOpenFileNames(self, '사진 열기', BASE_DIR, "Image files (*.JPG *.png)")
+    def saveXpa(self):
+        global FILE_NAME, SAVE_DIR
+        if not os.path.isdir(SAVE_DIR):
+            os.mkdir(SAVE_DIR)
+        setLabelText(self.progress_lbl, '[진행중] 작업을 저장중...')
+        self.progressOn()
+        save_file_name = FILE_NAME.split('/')[-1]
+        save_file_name = save_file_name.split('.')[0]
+        save_file_name = SAVE_DIR + '\\' + save_file_name + '.xpa'
 
-        if p_list[0]:
-            for img in p_list[0]:
-                self.beforeimg_list.addItem(img)
+        save_file = QFile(save_file_name)
+        save_file.open(QIODevice.WriteOnly)
+        save_file.open(QIODevice.Append)
+        stream_out = QDataStream(save_file)
+        for r in range(self.table.rowCount()):
+            for c in range(self.table.columnCount()):
+                if self.table.cellWidget(r, c):
+                    output_str = QVariant(self.table.cellWidget(r, c).imgpath)
+                    print(output_str.value())
+                    stream_out << output_str
+                else:
+                    output_str = QVariant('Null')
+                    print(output_str.value())
+                    stream_out << output_str
+        save_file.close()
+        setLabelText(self.progress_lbl, '[완료] 작업을 저장했습니다.')
+        self.progressOff()
 
-    def openAfterPhoto(self):
-        p_list = QFileDialog.getOpenFileNames(self, '사진 열기', BASE_DIR, "Image files (*.JPG *.png)")
+    def loadXpa(self):
+        global FILE_NAME, SAVE_DIR
+        self.progressOn()
+        save_file_name = FILE_NAME.split('/')[-1]
+        save_file_name = save_file_name.split('.')[0]
+        save_file_name = SAVE_DIR + '\\' + save_file_name + '.xpa'
+        if not os.path.isfile(save_file_name):
+            setLabelText(self.progress_lbl, '[에러 2] 작업 파일이 없습니다. %s 폴더를 다시 확인해보세요.' % 'Save')
+            return
+        try:
+            load_file = QFile(save_file_name)
+            load_file.open(QIODevice.ReadOnly)
+            stream_in = QDataStream(load_file)
+            for r in range(self.table.rowCount()):
+                for c in range(self.table.columnCount()):
+                    input_str = QVariant()
+                    stream_in >> input_str
+                    if input_str.value() != 'Null':
+                        widget = TableWidget(input_str.value())
+                        self.table.setCellWidget(r, c, widget)
+            load_file.close()
+            setLabelText(self.progress_lbl, '[완료] 작업 파일을 성공적으로 불러왔습니다.')
+        except:
+            setLabelText(self.progress_lbl, '[에러 3] 작업 파일을 불러올 수 없습니다. 다시 확인해보세요.sss')
+        self.progressOff()
 
-        if p_list[0]:
-            for img in p_list[0]:
-                self.afterimg_list.addItem(img)
+    def progressOn(self):
+        self.progress_bar.setMaximum(0)
 
-    def openPolePhoto(self):
-        p_list = QFileDialog.getOpenFileNames(self, '사진 열기', BASE_DIR, "Image files (*.JPG *.png)")
-
-        if p_list[0]:
-            for img in p_list[0]:
-                self.polenum_list.addItem(img)
-
-    # 추가된 사진을 보는 함수들
-    def viewBeforePhoto(self):
-        img = QPixmap()
-        item = self.beforeimg_list.currentItem().text()
-        img.load(item)
-        img = img.scaled(self.beforeimg_lbl.width(), self.beforeimg_lbl.height())
-        self.beforeimg_lbl.setPixmap(img)
-
-    def viewAfterPhoto(self):
-        img = QPixmap()
-        item = self.afterimg_list.currentItem().text()
-        img.load(item)
-        img = img.scaled(self.afterimg_lbl.width(), self.afterimg_lbl.height())
-        self.afterimg_lbl.setPixmap(img)
-
-    def viewPolePhoto(self):
-        img = QPixmap()
-        item = self.polenum_list.currentItem().text()
-        img.load(item)
-        img = img.scaled(self.polenum_lbl.width(), self.polenum_lbl.height())
-        self.polenum_lbl.setPixmap(img)
-
-    # 리스트에 추가된 사진들을 지우는 함수들
-    def clearBeforePhoto(self):
-        self.beforeimg_list.clear()
-        setLabelText(self.beforeimg_lbl, '전 사진을 비웠습니다.')
-
-    def clearAfterPhoto(self):
-        self.afterimg_list.clear()
-        setLabelText(self.afterimg_lbl, '후 사진을 비웠습니다.')
-
-    def clearPolePhoto(self):
-        self.polenum_list.clear()
-        setLabelText(self.polenum_lbl, '전주번호 사진을 비웠습니다.')
-
-    def removeBeforePhoto(self):
-        self.beforeimg_list.takeItem(self.beforeimg_list.currentRow())
-        setLabelText(self.beforeimg_lbl, '선택한 사진을 삭제했습니다.')
-
-    def removeAfterPhoto(self):
-        self.afterimg_list.takeItem(self.afterimg_list.currentRow())
-        setLabelText(self.afterimg_lbl, '선택한 사진을 삭제했습니다.')
-
-    def removePolePhoto(self):
-        self.polenum_list.takeItem(self.polenum_list.currentRow())
-        setLabelText(self.polenum_lbl, '선택한 사진을 삭제했습니다.')
-
-    def saveOn(self):
-        self.save_btn.setEnabled(True)
-
-    def saveOff(self):
-        self.save_btn.setEnabled(False)
+    def progressOff(self):
+        self.progress_bar.setMaximum(1)
 
 
 if __name__ == "__main__" :
