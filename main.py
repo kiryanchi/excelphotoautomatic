@@ -11,7 +11,7 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SAVE_DIR = BASE_DIR + '\\Save'
-form_class = uic.loadUiType("my_form.ui")[0]
+form_class = uic.loadUiType(BASE_DIR + '\\UI\\' + "my_form.ui")[0]
 FILE_NAME = 'default'
 
 
