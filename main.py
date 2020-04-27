@@ -1,6 +1,7 @@
 import sys
 import openpyxl
-from PyQt5.QtWidgets import QFileDialog, QApplication, QWidget, QLabel, QLayout, QHeaderView, QTableWidget, QHBoxLayout, QAbstractItemView
+from UI.TableWidget import TableWidget
+from PyQt5.QtWidgets import QFileDialog, QApplication, QWidget, QLabel, QLayout, QHeaderView, QTableWidget, QVBoxLayout, QHBoxLayout, QAbstractItemView, QTabWidget
 from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
 from PyQt5 import QtCore
@@ -40,7 +41,7 @@ class TableWidget(QWidget):
         self.setLayout(self.widget_layout)
 
 
-class MyTabel(QTableWidget):
+class MyTable(QTableWidget):
     def __init__(self):
         super().__init__(0, 3)
         self.setAcceptDrops(True)
@@ -85,10 +86,21 @@ class MyTabel(QTableWidget):
         return widget
 
 
+class MyTabBar(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.table = MyTable()
+        self.table.setEnabled(True)
+        vbox = QVBoxLayout()
+        vbox.addWidget(self.table)
+        self.setLayout(vbox)
+
+
 class WindowClass(QWidget, form_class):
     table = None
     wb = None
     sheet = None
+    tab_bar_list = {}
 
     def __init__(self):
         super().__init__()
@@ -96,10 +108,9 @@ class WindowClass(QWidget, form_class):
         self.initUI()
 
     def initUI(self):
-        # 그리드 레이아웃?
-        self.table = MyTabel()
-        self.table.setEnabled(False)
-        self.gridLayout_2.addWidget(self.table)
+        self.buttonClick()
+
+    def buttonClick(self):
         self.fileopen_btn.clicked.connect(self.openExcel)
         self.save_btn.clicked.connect(self.saveXpa)
         self.load_btn.clicked.connect(self.loadXpa)
@@ -107,7 +118,6 @@ class WindowClass(QWidget, form_class):
         self.filesave_btn.clicked.connect(self.insert)
         self.delete_btn.clicked.connect(self.delete)
         self.deleteall_btn.clicked.connect(self.deleteall)
-        # self.saveoption.setToolTip('작업과정을 사진이 포함되어 저장됩니다. 용량이 매우 커질 수 있습니다.')
 
     def deleteall(self):
         self.progressOn()
@@ -154,24 +164,33 @@ class WindowClass(QWidget, form_class):
         name = fname.split('/')[-1]
         FILE_NAME = fname
         # 엑셀 파일을 분석한다. openpyxl
-        self.wb = openpyxl.load_workbook(FILE_NAME)
+        self.sheetlist.clear()
         try:
-            self.sheet = self.wb['작업사진']
-        except KeyError:
-            setLabelText(self.progress_lbl, "[에러 1] '작업사진' 워크시트를 열지 못 했습니다. 엑셀파일을 확인해주세요.")
+            self.wb = openpyxl.load_workbook(FILE_NAME)
+        except FileNotFoundError:
+            setLabelText(self.progress_lbl, '[에러 1] ' + name + ' 파일을 열지 못 했습니다. 엑셀 파일을 확인해주세요.')
+            self.progressOff()
         else:
-            row = (self.sheet.max_row - 1) // 19
-            self.table.setRowCount(row)
+            name_list = self.wb.sheetnames
+            print(name_list)
+            for sheet_name in name_list:
+                print(sheet_name)
+                sheet = self.wb[sheet_name]
+                row = (sheet.max_row - 1) // 19
+                new_tab_bar = MyTabBar()
+                new_tab_bar.table.setRowCount(row)
+                self.sheetlist.addTab(new_tab_bar, sheet_name)
+                self.tab_bar_list[sheet_name] = new_tab_bar
             setLabelText(self.fileopen_lbl, name)
             self.save_btn.setEnabled(True)
             self.load_btn.setEnabled(True)
             self.reload_btn.setEnabled(True)
             self.filesave_btn.setEnabled(True)
             self.delete_btn.setEnabled(True)
-            self.table.setEnabled(True)
             self.deleteall_btn.setEnabled(True)
             setLabelText(self.progress_lbl, '[완료] 파일을 성공적으로 열었습니다.')
-        self.progressOff()
+            self.progressOff()
+            return True
 
     def openExcel(self):
         setLabelText(self.progress_lbl, '[진행중] 파일을 여는 중...')
@@ -180,8 +199,7 @@ class WindowClass(QWidget, form_class):
 
         if fname[0]:
             if os.path.isfile(fname[0]):
-                t = threading.Thread(target=self.loadExcel, kwargs={'fname': fname[0]})
-                t.start()
+                self.loadExcel(fname[0])
         else:
             setLabelText(self.progress_lbl, '[에러 0] 파일이 잘못 선택됐습니다. 다시 선택해주세요')
             self.progressOff()

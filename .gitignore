@@ -9,3 +9,6 @@ test.py
 test2.xlsx
 test2.xpa
 test_my_form.*
+UI/test.*
+UI/*.py
+*.xlsx

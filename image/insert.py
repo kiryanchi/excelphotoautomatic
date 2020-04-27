@@ -1,9 +1,5 @@
 # -*- coding:utf-8 -*-
-import openpyxl
 from openpyxl.drawing.image import Image
-from .resize import resizing
-from handling.error import ResizeError
-import os
 
 '''
     엑셀 파일 이름을 넘기면, 이미지를 폴더에서 찾은 다음, 
