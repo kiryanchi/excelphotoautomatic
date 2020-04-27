@@ -1,6 +1,5 @@
 import sys
 import openpyxl
-from UI.TableWidget import TableWidget
 from PyQt5.QtWidgets import QFileDialog, QApplication, QWidget, QLabel, QLayout, QHeaderView, QTableWidget, QVBoxLayout, QHBoxLayout, QAbstractItemView, QTabWidget
 from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
@@ -172,9 +171,7 @@ class WindowClass(QWidget, form_class):
             self.progressOff()
         else:
             name_list = self.wb.sheetnames
-            print(name_list)
             for sheet_name in name_list:
-                print(sheet_name)
                 sheet = self.wb[sheet_name]
                 row = (sheet.max_row - 1) // 19
                 new_tab_bar = MyTabBar()
