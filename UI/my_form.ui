@@ -47,13 +47,16 @@
      <item row="0" column="0">
       <widget class="QPushButton" name="load_btn">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
         <string>작업 불러오기 (L)</string>
        </property>
        <property name="shortcut">
         <string>Ctrl+L</string>
+       </property>
+       <property name="checkable">
+        <bool>false</bool>
        </property>
       </widget>
      </item>

@@ -1,6 +1,7 @@
 import sys
 import openpyxl
-from PyQt5.QtWidgets import QFileDialog, QApplication, QWidget, QLabel, QLayout, QHeaderView, QTableWidget, QVBoxLayout, QHBoxLayout, QAbstractItemView, QTabWidget
+from PyQt5.QtWidgets import QFileDialog, QApplication, QWidget, QLabel, QLayout, QHeaderView, QTableWidget, QVBoxLayout, \
+    QHBoxLayout, QAbstractItemView, QTabWidget
 from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
 from PyQt5 import QtCore
@@ -29,10 +30,11 @@ class TableWidgetPixmap(QPixmap):
 class TableWidget(QWidget):
     def __init__(self, imgpath, pixmap=None):
         super().__init__()
+        tab_idx = myWindow.sheetlist.currentIndex()
         self.imgpath = imgpath
         self.lbl = QLabel()
         self.img = TableWidgetPixmap(imgpath) if pixmap is None else pixmap
-        self.img = self.img.scaled(myWindow.table.width() // 3 - 30, 300 + 10)
+        self.img = self.img.scaled(myWindow.sheetlist.widget(tab_idx).table.width() // 3 - 30, 300 + 10)
         self.lbl.setPixmap(self.img)
         self.widget_layout = QHBoxLayout()
         self.widget_layout.addWidget(self.lbl)
@@ -75,13 +77,23 @@ class MyTable(QTableWidget):
             url = e.mimeData().urls()[0]
             url = str(url.toLocalFile())
             if url.split('.')[-1] == 'JPG' or url.split('.')[-1] == 'jpg':
+                tab_idx = myWindow.sheetlist.currentIndex()
+                print(tab_idx)
+                current_tab = myWindow.sheetlist.tabText(tab_idx)
+                print(url)
                 widget = self.CreateTableWidget(url)
-                row = myWindow.table.currentRow()
-                col = myWindow.table.currentColumn()
-                myWindow.table.setCellWidget(row, col, widget)
+                print(widget)
+                row = myWindow.sheetlist.widget(tab_idx).table.currentRow()
+                print(row)
+                col = myWindow.sheetlist.widget(tab_idx).table.currentColumn()
+                print(col)
+                print('***********')
+                myWindow.sheetlist.widget(tab_idx).table.setCellWidget(row, col, widget)
 
     def CreateTableWidget(self, imgpath, pixmap=None):
+        print(imgpath)
         widget = TableWidget(imgpath, pixmap)
+        print('done?')
         return widget
 
 
@@ -180,7 +192,6 @@ class WindowClass(QWidget, form_class):
                 self.tab_bar_list[sheet_name] = new_tab_bar
             setLabelText(self.fileopen_lbl, name)
             self.save_btn.setEnabled(True)
-            self.load_btn.setEnabled(True)
             self.reload_btn.setEnabled(True)
             self.filesave_btn.setEnabled(True)
             self.delete_btn.setEnabled(True)
@@ -202,27 +213,40 @@ class WindowClass(QWidget, form_class):
             self.progressOff()
 
     def saveXpa(self):
-        global FILE_NAME, SAVE_DIR
-        if not os.path.isdir(SAVE_DIR):
-            os.mkdir(SAVE_DIR)
+        global FILE_NAME
+        filters = "xpa File (*.xpa);; xpae File (*.xpae)"
         setLabelText(self.progress_lbl, '[진행중] 작업을 저장중...')
         self.progressOn()
-        save_file_name = FILE_NAME.split('/')[-1]
-        save_file_name = save_file_name.split('.')[0]
-        save_file_name = SAVE_DIR + '\\' + save_file_name + '.xpa'
+        excel_name = FILE_NAME.split('.')[0]
+        save_file_name = QFileDialog.getSaveFileName(self, "파일 저장하기", filter=filters)
+        print(save_file_name)
+        print(self.sheetlist.count())
 
-        save_file = QFile(save_file_name)
+        save_file = QFile(save_file_name[0])
+        print('test')
         save_file.open(QIODevice.WriteOnly)
+        print('test')
         save_file.open(QIODevice.Append)
+        print('test')
         stream_out = QDataStream(save_file)
-        for r in range(self.table.rowCount()):
-            for c in range(self.table.columnCount()):
-                if self.table.cellWidget(r, c):
-                    output_str = QVariant(self.table.cellWidget(r, c).imgpath)
-                    stream_out << output_str
-                else:
-                    output_str = QVariant('Null')
-                    stream_out << output_str
+        print('test')
+        # 엑셀 파일 이름을 먼저 저장
+        file_name = QVariant(excel_name)
+        print('test')
+        stream_out << file_name
+        print('test')
+        for i in range(self.sheetlist.count()):
+            print(self.sheetlist.tabText(i))
+            print(self.sheetlist.widget(i))
+            for r in range(self.sheetlist.widget(i).table.rowCount()):
+                for c in range(self.sheetlist.widget(i).table.columnCount()):
+                    print(r, c)
+                    if self.sheetlist.widget(i).table.cellWidget(r, c):
+                        output_str = QVariant(self.sheetlist.widget(i).table.cellWidget(r, c,).imgpath)
+                        stream_out << output_str
+                    else:
+                        output_str = QVariant('Null')
+                        stream_out << output_str
         save_file.close()
         setLabelText(self.progress_lbl, '[완료] 작업을 저장했습니다.')
         self.progressOff()
@@ -261,7 +285,7 @@ class WindowClass(QWidget, form_class):
         self.progress_bar.setMaximum(1)
 
 
-if __name__ == "__main__" :
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     myWindow = WindowClass()
     myWindow.show()
