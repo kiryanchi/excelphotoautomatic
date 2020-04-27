@@ -275,47 +275,33 @@ class WindowClass(QWidget, form_class):
         # excel_name = FILE_NAME.split('/')[-1]
 
         load_file = QFile(load_file_name)
-        print('test')
         load_file.open(QIODevice.ReadOnly)
         stream_in = QDataStream(load_file)
         file_name = QVariant()
         stream_in >> file_name
-        print('test')
         # 파일 확장자가 xlsx가 아닐 경우 에러를 뿜뿜
         if file_name.value().split('.')[-1] != 'xlsx':
             print('파일이 xlsx가 아님')
             return
 
         tab_num = QVariant()
-        print('test')
         stream_in >> tab_num
-        print('test')
         tab_num = int(tab_num.value())
-        print('test')
 
         if load_file_name.split('.')[1] == 'xpa':
-            print('xpa')
             for i in range(tab_num):
                 tab_name = QVariant()
                 row_num = QVariant()
                 col_num = QVariant()
-                print('test')
                 stream_in >> tab_name >> row_num >> col_num
-                print('test')
                 new_tab_bar = MyTabBar()
-                print('test')
                 new_tab_bar.table.setRowCount(row_num.value())
-                print('test')
                 self.sheetlist.addTab(new_tab_bar, tab_name.value())
-                print('test')
                 for r in range(row_num.value()):
                     for c in range(col_num.value()):
                         input_str = QVariant()
-                        print('test')
                         stream_in >> input_str
-                        print('test')
                         if input_str.value() != 'Null':
-                            print('널 아님!!')
                             widget = TableWidget(input_str.value())
                             self.sheetlist.widget(i).table.setCellWidget(r, c, widget)
 
@@ -335,6 +321,7 @@ class WindowClass(QWidget, form_class):
                         if input_str.value() != 'Null':
                             widget = TableWidget(None, pixmap=input_str.value())
                             self.sheetlist.widget(i).table.setCellWidget(r, c, widget)
+
         self.save_btn.setEnabled(True)
         self.deleteall_btn.setEnabled(True)
         self.delete_btn.setEnabled(True)
