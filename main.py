@@ -74,7 +74,7 @@ class MyTabel(QTableWidget):
         if e.mimeData().hasUrls and FILE_NAME != "default":
             url = e.mimeData().urls()[0]
             url = str(url.toLocalFile())
-            if url.split('.')[-1] == 'JPG':
+            if url.split('.')[-1] == 'JPG' or url.split('.')[-1] == 'jpg':
                 widget = self.CreateTableWidget(url)
                 row = myWindow.table.currentRow()
                 col = myWindow.table.currentColumn()
@@ -105,7 +105,23 @@ class WindowClass(QWidget, form_class):
         self.load_btn.clicked.connect(self.loadXpa)
         self.reload_btn.clicked.connect(self.reload)
         self.filesave_btn.clicked.connect(self.insert)
+        self.delete_btn.clicked.connect(self.delete)
+        self.deleteall_btn.clicked.connect(self.deleteall)
         # self.saveoption.setToolTip('작업과정을 사진이 포함되어 저장됩니다. 용량이 매우 커질 수 있습니다.')
+
+    def deleteall(self):
+        self.progressOn()
+        widget = QWidget()
+        for r in range(self.table.rowCount()):
+            for c in range(self.table.columnCount()):
+                self.table.setCellWidget(r, c, widget)
+        self.progressOff()
+
+    def delete(self):
+        widget = QWidget()
+        r = self.table.currentRow()
+        c = self.table.currentColumn()
+        self.table.setCellWidget(r, c, widget)
 
     def insert(self):
         t = threading.Thread(target=self.inserting)
@@ -151,7 +167,9 @@ class WindowClass(QWidget, form_class):
             self.load_btn.setEnabled(True)
             self.reload_btn.setEnabled(True)
             self.filesave_btn.setEnabled(True)
+            self.delete_btn.setEnabled(True)
             self.table.setEnabled(True)
+            self.deleteall_btn.setEnabled(True)
             setLabelText(self.progress_lbl, '[완료] 파일을 성공적으로 열었습니다.')
         self.progressOff()
 
@@ -186,11 +204,9 @@ class WindowClass(QWidget, form_class):
             for c in range(self.table.columnCount()):
                 if self.table.cellWidget(r, c):
                     output_str = QVariant(self.table.cellWidget(r, c).imgpath)
-                    print(output_str.value())
                     stream_out << output_str
                 else:
                     output_str = QVariant('Null')
-                    print(output_str.value())
                     stream_out << output_str
         save_file.close()
         setLabelText(self.progress_lbl, '[완료] 작업을 저장했습니다.')
@@ -204,6 +220,7 @@ class WindowClass(QWidget, form_class):
         save_file_name = SAVE_DIR + '\\' + save_file_name + '.xpa'
         if not os.path.isfile(save_file_name):
             setLabelText(self.progress_lbl, '[에러 2] 작업 파일이 없습니다. %s 폴더를 다시 확인해보세요.' % 'Save')
+            self.progressOff()
             return
         try:
             load_file = QFile(save_file_name)

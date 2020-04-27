@@ -8,7 +8,7 @@ import os
 '''
     엑셀 파일 이름을 넘기면, 이미지를 폴더에서 찾은 다음, 
 '''
-FIXED_SIZE = (512.125984252, 335.622047244)
+FIXED_SIZE = (515.527559055, 335.622047244)
 
 
 def insertinexcel(img_name, column, row, sheet):

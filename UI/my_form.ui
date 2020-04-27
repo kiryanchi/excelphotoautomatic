@@ -19,74 +19,7 @@
    <string>엑셀 자동 작업 프로그램</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="4" column="11">
-    <widget class="QProgressBar" name="progress_bar">
-     <property name="minimumSize">
-      <size>
-       <width>200</width>
-       <height>20</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>200</width>
-       <height>20</height>
-      </size>
-     </property>
-     <property name="maximum">
-      <number>1</number>
-     </property>
-     <property name="value">
-      <number>0</number>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <property name="format">
-      <string>완료</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1">
-    <widget class="QPushButton" name="fileopen_btn">
-     <property name="maximumSize">
-      <size>
-       <width>200</width>
-       <height>16777215</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>엑셀 파일 불러오기 (O)</string>
-     </property>
-     <property name="shortcut">
-      <string>Ctrl+O</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="11">
-    <widget class="QPushButton" name="filesave_btn">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="text">
-      <string>엑셀에 사진넣기</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="11">
-    <widget class="QPushButton" name="save_btn">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="text">
-      <string>작업 저장 (S)</string>
-     </property>
-     <property name="shortcut">
-      <string>Ctrl+S</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="1" colspan="10">
+   <item row="4" column="1" colspan="12">
     <widget class="QLabel" name="aleart">
      <property name="minimumSize">
       <size>
@@ -115,14 +48,20 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="2" colspan="7">
-    <widget class="QLabel" name="fileopen_lbl">
+   <item row="0" column="13">
+    <widget class="QPushButton" name="save_btn">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="text">
-      <string>선택된 엑셀 파일이 없습니다.</string>
+      <string>작업 저장 (S)</string>
+     </property>
+     <property name="shortcut">
+      <string>Ctrl+S</string>
      </property>
     </widget>
    </item>
-   <item row="4" column="4" colspan="7">
+   <item row="5" column="6" colspan="7">
     <widget class="QLabel" name="progress_lbl">
      <property name="minimumSize">
       <size>
@@ -144,7 +83,7 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="1" colspan="11">
+   <item row="1" column="1" colspan="13">
     <layout class="QGridLayout" name="gridLayout_2">
      <item row="0" column="0">
       <widget class="QPushButton" name="load_btn">
@@ -161,7 +100,91 @@
      </item>
     </layout>
    </item>
-   <item row="2" column="1" colspan="11">
+   <item row="4" column="13">
+    <widget class="QPushButton" name="filesave_btn">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>엑셀에 사진넣기</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="13">
+    <widget class="QProgressBar" name="progress_bar">
+     <property name="minimumSize">
+      <size>
+       <width>200</width>
+       <height>20</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>200</width>
+       <height>20</height>
+      </size>
+     </property>
+     <property name="maximum">
+      <number>1</number>
+     </property>
+     <property name="value">
+      <number>0</number>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="format">
+      <string>완료</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <widget class="QPushButton" name="deleteall_btn">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>사진 전체 삭제</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QPushButton" name="fileopen_btn">
+     <property name="maximumSize">
+      <size>
+       <width>200</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>엑셀 파일 불러오기 (O)</string>
+     </property>
+     <property name="shortcut">
+      <string>Ctrl+O</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="3" colspan="7">
+    <widget class="QLabel" name="fileopen_lbl">
+     <property name="text">
+      <string>선택된 엑셀 파일이 없습니다.</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QPushButton" name="delete_btn">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>사진 삭제 (Del)</string>
+     </property>
+     <property name="shortcut">
+      <string>Del</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2" colspan="12">
     <widget class="QPushButton" name="reload_btn">
      <property name="enabled">
       <bool>false</bool>
