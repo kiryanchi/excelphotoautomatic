@@ -119,10 +119,12 @@ class WindowClass(QWidget, form_class):
 
     def deleteall(self):
         self.progressOn()
-        widget = QWidget()
-        for r in range(self.table.rowCount()):
-            for c in range(self.table.columnCount()):
-                self.table.setCellWidget(r, c, widget)
+        tab_idx = myWindow.sheetlist.currentIndex()
+        img = QPixmap()
+        widget = TableWidget(None, pixmap=img)
+        for r in range(self.sheetlist.widget(tab_idx).table.rowCount()):
+            for c in range(self.sheetlist.widget(tab_idx).table.columnCount()):
+                self.sheetlist.widget(tab_idx).table.setCellWidget(r, c, widget)
         self.progressOff()
 
     def delete(self):
