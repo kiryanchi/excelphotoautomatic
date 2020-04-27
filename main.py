@@ -126,10 +126,12 @@ class WindowClass(QWidget, form_class):
         self.progressOff()
 
     def delete(self):
-        widget = QWidget()
-        r = self.table.currentRow()
-        c = self.table.currentColumn()
-        self.table.setCellWidget(r, c, widget)
+        tab_idx = myWindow.sheetlist.currentIndex()
+        r = self.sheetlist.widget(tab_idx).table.currentRow()
+        c = self.sheetlist.widget(tab_idx).table.currentColumn()
+        img = QPixmap()
+        widget = TableWidget(None, pixmap=img)
+        self.sheetlist.widget(tab_idx).table.setCellWidget(r, c, widget)
 
     def insert(self):
         t = threading.Thread(target=self.inserting)
@@ -211,52 +213,68 @@ class WindowClass(QWidget, form_class):
         filters = "xpa File (*.xpa);; xpae File (*.xpae)"
         setLabelText(self.progress_lbl, '[진행중] 작업을 저장중...')
         self.progressOn()
+        # 순수하게 *.xlsx 파일만 남기기 위해 작업
         excel_name = FILE_NAME.split('/')[-1]
-        print(excel_name)
+        excel_name = excel_name.split("\\")[-1]
+        # print(excel_name)
         save_file_name, _ = QFileDialog.getSaveFileName(self, "파일 저장하기", filter=filters)
 
-        save_file = QFile(save_file_name)
-        save_file.open(QIODevice.WriteOnly)
-        save_file.open(QIODevice.Append)
-        stream_out = QDataStream(save_file)
-        # 엑셀 파일 이름을 먼저 저장
-        file_name = QVariant(excel_name)
-        stream_out << file_name
-        tab_num = QVariant(self.sheetlist.count())
-        stream_out << tab_num
-        if save_file_name.split('.')[1] == 'xpa':
-            # 시트 이름을 저장
-            for i in range(self.sheetlist.count()):
-                tab_str = QVariant(self.sheetlist.tabText(i))
-                stream_out << tab_str
-                row_num = QVariant(self.sheetlist.widget(i).table.rowCount())
-                stream_out << row_num
-                col_num = QVariant(self.sheetlist.widget(i).table.columnCount())
-                stream_out << col_num
-                for r in range(self.sheetlist.widget(i).table.rowCount()):
-                    for c in range(self.sheetlist.widget(i).table.columnCount()):   # 3
-                        if self.sheetlist.widget(i).table.cellWidget(r, c):
-                            output_str = QVariant(self.sheetlist.widget(i).table.cellWidget(r, c).imgpath)
-                            stream_out << output_str
-                        else:
-                            output_str = QVariant('Null')
-                            stream_out << output_str
+        if save_file_name:
+            save_file = QFile(save_file_name)
+            save_file.open(QIODevice.WriteOnly)
+            save_file.open(QIODevice.Append)
+            stream_out = QDataStream(save_file)
+            # 엑셀 파일 이름을 먼저 저장
+            file_name = QVariant(excel_name)
+            stream_out << file_name
+            print('저장 파일명: ' + file_name.value())
+            tab_num = QVariant(self.sheetlist.count())
+            stream_out << tab_num
 
-        elif save_file_name.split('.')[1] == 'xpae':
-            # 시트 이름을 저장
-            for i in range(self.sheetlist.count()):
-                tab_str = QVariant(self.sheetlist.tabText(i))
-                stream_out << tab_str
-                for r in range(self.sheetlist.widget(i).table.rowCount()):
-                    for c in range(self.sheetlist.widget(i).table.columnCount()):
-                        if self.sheetlist.widget(i).table.cellWidget(r, c):
-                            output_str = QPixmap(self.sheetlist.widget(i).table.cellWidget(r, c).img)
-                            stream_out << output_str
-                        else:
-                            output_str = QVariant('Null')
-                            stream_out << output_str
-        save_file.close()
-        setLabelText(self.progress_lbl, '[완료] 작업을 저장했습니다.')
+            if save_file_name.split('.')[1] == 'xpa':
+                # 시트 이름을 저장
+                for i in range(self.sheetlist.count()):
+                    tab_str = QVariant(self.sheetlist.tabText(i))
+                    t_str = tab_str.value() # test
+                    stream_out << tab_str
+                    row_num = QVariant(self.sheetlist.widget(i).table.rowCount())
+                    t_str += ' ' + str(row_num.value()) # test
+                    stream_out << row_num
+                    col_num = QVariant(self.sheetlist.widget(i).table.columnCount())
+                    t_str += ' ' + str(col_num.value()) # test
+                    stream_out << col_num
+                    print('저장 r, c: ' + t_str) # test
+                    for r in range(self.sheetlist.widget(i).table.rowCount()):
+                        for c in range(self.sheetlist.widget(i).table.columnCount()):   # 3
+                            if self.sheetlist.widget(i).table.cellWidget(r, c):
+                                output_str = QVariant(self.sheetlist.widget(i).table.cellWidget(r, c).imgpath)
+                                stream_out << output_str
+                            else:
+                                output_str = QVariant('Null')
+                                stream_out << output_str
+
+            elif save_file_name.split('.')[1] == 'xpae':
+                # 시트 이름을 저장
+                for i in range(self.sheetlist.count()):
+                    tab_str = QVariant(self.sheetlist.tabText(i))
+                    stream_out << tab_str
+                    row_num = QVariant(self.sheetlist.widget(i).table.rowCount())
+                    stream_out << row_num
+                    col_num = QVariant(self.sheetlist.widget(i).table.columnCount())
+                    stream_out << col_num
+                    for r in range(self.sheetlist.widget(i).table.rowCount()):
+                        for c in range(self.sheetlist.widget(i).table.columnCount()):
+                            if self.sheetlist.widget(i).table.cellWidget(r, c):
+                                output_str = QPixmap(self.sheetlist.widget(i).table.cellWidget(r, c).img)
+                                stream_out << output_str
+                            else:
+                                output_str = QPixmap()
+                                print(r, c, output_str.isNull())
+                                stream_out << output_str
+            save_file.close()
+            setLabelText(self.progress_lbl, '[완료] 작업을 저장했습니다.')
+        else:
+            setLabelText(self.progress_lbl, '[에러 ??] 파일 저장에 실패했습니다.')
         self.progressOff()
 
     def loadXpa(self):
@@ -270,63 +288,61 @@ class WindowClass(QWidget, form_class):
         """
         global FILE_NAME, SAVE_DIR
         self.progressOn()
+        self.sheetlist.clear()
         filters = "xpa File (*.xpa);; xpae File (*.xpae)"
         load_file_name, _ = QFileDialog.getOpenFileName(self, '저장 파일 선택', BASE_DIR, filter=filters)
         # excel_name = FILE_NAME.split('/')[-1]
 
-        load_file = QFile(load_file_name)
-        load_file.open(QIODevice.ReadOnly)
-        stream_in = QDataStream(load_file)
-        file_name = QVariant()
-        stream_in >> file_name
-        # 파일 확장자가 xlsx가 아닐 경우 에러를 뿜뿜
-        if file_name.value().split('.')[-1] != 'xlsx':
-            print('파일이 xlsx가 아님')
-            return
+        if load_file_name:
+            load_file = QFile(load_file_name)
+            load_file.open(QIODevice.ReadOnly)
+            stream_in = QDataStream(load_file)
+            file_name = QVariant()
+            stream_in >> file_name
+            print('로드 파일명: ' + file_name.value())
+            # 파일 확장자가 xlsx가 아닐 경우 에러를 뿜뿜
+            if file_name.value().split('.')[-1] != 'xlsx':
+                print('파일이 xlsx가 아님')
+                return
+            FILE_NAME = BASE_DIR + '\\' + file_name.value()
+            setLabelText(self.fileopen_lbl, file_name.value())
+            print(FILE_NAME)
+            tab_num = QVariant()
+            stream_in >> tab_num
+            tab_num = tab_num.value()
 
-        tab_num = QVariant()
-        stream_in >> tab_num
-        tab_num = int(tab_num.value())
-
-        if load_file_name.split('.')[1] == 'xpa':
             for i in range(tab_num):
                 tab_name = QVariant()
+                stream_in >> tab_name
                 row_num = QVariant()
+                stream_in >> row_num
                 col_num = QVariant()
-                stream_in >> tab_name >> row_num >> col_num
+                stream_in >> col_num
                 new_tab_bar = MyTabBar()
                 new_tab_bar.table.setRowCount(row_num.value())
                 self.sheetlist.addTab(new_tab_bar, tab_name.value())
                 for r in range(row_num.value()):
                     for c in range(col_num.value()):
-                        input_str = QVariant()
-                        stream_in >> input_str
-                        if input_str.value() != 'Null':
-                            widget = TableWidget(input_str.value())
+                        if load_file_name.split('.')[1] == 'xpa':
+                            input_str = QVariant()
+                            stream_in >> input_str
+                            if input_str.value() != 'Null':
+                                widget = TableWidget(input_str.value())
+                                self.sheetlist.widget(i).table.setCellWidget(r, c, widget)
+
+                        elif load_file_name.split('.')[1] == 'xpae':
+                            input_img = QPixmap()
+                            stream_in >> input_img
+                            widget = TableWidget(None, pixmap=input_img)
                             self.sheetlist.widget(i).table.setCellWidget(r, c, widget)
 
-        elif load_file_name.split('.')[1] == 'xpae':
-            for i in range(tab_num):
-                tab_name = QVariant()
-                row_num = QVariant()
-                col_num = QVariant()
-                stream_in >> tab_name >> row_num >> col_num
-                new_tab_bar = MyTabBar()
-                new_tab_bar.table.setRowCount(row_num.value())
-                self.sheetlist.addTab(new_tab_bar, tab_name.value())
-                for r in range(row_num.value()):
-                    for c in range(col_num.value()):
-                        input_str = QVariant()
-                        stream_in >> input_str
-                        if input_str.value() != 'Null':
-                            widget = TableWidget(None, pixmap=input_str.value())
-                            self.sheetlist.widget(i).table.setCellWidget(r, c, widget)
-
-        self.save_btn.setEnabled(True)
-        self.deleteall_btn.setEnabled(True)
-        self.delete_btn.setEnabled(True)
-        self.reload_btn.setEnabled(True)
-        load_file.close()
+            self.save_btn.setEnabled(True)
+            self.deleteall_btn.setEnabled(True)
+            self.delete_btn.setEnabled(True)
+            self.reload_btn.setEnabled(True)
+            load_file.close()
+        else:
+            setLabelText(self.progress_lbl, '[에러 ??] 파일 로드에 실패했습니다.')
         self.progressOff()
 
     def progressOn(self):
