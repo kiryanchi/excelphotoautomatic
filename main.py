@@ -1,8 +1,8 @@
 import sys
 import openpyxl
 from PyQt5.QtWidgets import QFileDialog, QApplication, QWidget, QLabel, QLayout, QHeaderView, QTableWidget, QVBoxLayout, \
-    QHBoxLayout, QAbstractItemView, QMessageBox, QAction, QShortcut
-from PyQt5.QtGui import QPixmap, QClipboard
+    QHBoxLayout, QAbstractItemView, QMessageBox, QShortcut
+from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
 from PyQt5 import QtCore
 from PyQt5.QtCore import QFile, QIODevice, QDataStream, QVariant
@@ -83,7 +83,6 @@ class MyTable(QTableWidget):
         c = self.currentColumn()
         widget = TableWidget(image)
         self.setCellWidget(r, c, widget)
-
 
     def dragEnterEvent(self, e):
         if e.mimeData().hasUrls:
