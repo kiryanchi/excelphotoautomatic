@@ -227,6 +227,9 @@
    </item>
    <item row="0" column="11">
     <widget class="QPushButton" name="scaledown_btn">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="maximumSize">
       <size>
        <width>30</width>
@@ -240,6 +243,9 @@
    </item>
    <item row="0" column="10">
     <widget class="QPushButton" name="scaleup_btn">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="maximumSize">
       <size>
        <width>30</width>
