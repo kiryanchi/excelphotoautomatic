@@ -19,6 +19,38 @@
    <string>엑셀 자동 작업 프로그램</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="11">
+    <widget class="QPushButton" name="scaledown_btn">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>30</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>-</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="10">
+    <widget class="QPushButton" name="scaleup_btn">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>30</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>+</string>
+     </property>
+    </widget>
+   </item>
    <item row="5" column="12">
     <widget class="QPushButton" name="filesave_btn">
      <property name="enabled">
@@ -174,28 +206,6 @@
      </property>
     </widget>
    </item>
-   <item row="6" column="6" colspan="6">
-    <widget class="QLabel" name="progress_lbl">
-     <property name="minimumSize">
-      <size>
-       <width>300</width>
-       <height>20</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>20</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>진행상황</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-   </item>
    <item row="5" column="1" colspan="11">
     <widget class="QLabel" name="aleart">
      <property name="minimumSize">
@@ -225,35 +235,25 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="11">
-    <widget class="QPushButton" name="scaledown_btn">
-     <property name="enabled">
-      <bool>false</bool>
+   <item row="6" column="1" colspan="11">
+    <widget class="QLabel" name="progress_lbl">
+     <property name="minimumSize">
+      <size>
+       <width>300</width>
+       <height>20</height>
+      </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>30</width>
-       <height>16777215</height>
+       <width>16777215</width>
+       <height>20</height>
       </size>
      </property>
      <property name="text">
-      <string>-</string>
+      <string>진행상황</string>
      </property>
-    </widget>
-   </item>
-   <item row="0" column="10">
-    <widget class="QPushButton" name="scaleup_btn">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>30</width>
-       <height>16777215</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>+</string>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
    </item>

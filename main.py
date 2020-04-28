@@ -36,7 +36,7 @@ class TableWidget(QWidget):
         self.imgpath = imgpath
         self.lbl = QLabel()
         self.img = TableWidgetPixmap(imgpath) if pixmap is None else pixmap
-        self.img = self.img.scaled(myWindow.sheetlist.widget(tab_idx).table.width() // 3 - 30, 300 + 10)
+        self.img = self.img.scaled(myWindow.sheetlist.widget(tab_idx).table.width() // 3 - 30, 190 + 10)
         self.lbl.setPixmap(self.img)
         self.widget_layout = QHBoxLayout()
         self.widget_layout.addWidget(self.lbl)
@@ -55,16 +55,24 @@ class MyTable(QTableWidget):
         self.setAlternatingRowColors(True)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setMinimumSize(QtCore.QSize(990, 630))
-        self.verticalHeader().setDefaultSectionSize(330)
+        self.verticalHeader().setDefaultSectionSize(220)
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.setHorizontalHeaderLabels(['작업 전', '작업 후', '전주 번호'])
+        self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
 
         copyShortcut = QShortcut(QKeySequence.Copy, self)
         pasteShortcut = QShortcut(QKeySequence.Paste, self)
 
         copyShortcut.activated.connect(self.copy)
         pasteShortcut.activated.connect(self.paste)
+
+    #
+    def scaleup(self):
+        pass
+
+    def scaledown(self):
+        pass
 
     def copy(self):
         selectedRangeList = self.selectedRanges()
@@ -145,6 +153,17 @@ class WindowClass(QWidget, form_class):
         self.filesave_btn.clicked.connect(self.insert)
         self.delete_btn.clicked.connect(self.delete)
         self.deleteall_btn.clicked.connect(self.deleteall)
+        self.scaleup_btn.clicked.connect(MyTable.scaleup)
+        self.scaledown_btn.clicked.connect(MyTable.scaledown)
+
+    def buttonActive(self):
+        self.save_btn.setEnabled(True)
+        self.reload_btn.setEnabled(True)
+        self.filesave_btn.setEnabled(True)
+        self.delete_btn.setEnabled(True)
+        self.deleteall_btn.setEnabled(True)
+        # self.scaleup_btn.setEnabled(True)
+        # self.scaledown_btn.setEnabled(True)
 
     def deleteall(self):
         global NOT_SAVE
@@ -178,8 +197,14 @@ class WindowClass(QWidget, form_class):
         NOT_SAVE = True
 
     def insert(self):
-        t = threading.Thread(target=self.inserting)
-        t.start()
+        global FILE_NAME
+        print(FILE_NAME)
+        if os.path.isfile(FILE_NAME):
+            t = threading.Thread(target=self.inserting)
+            t.start()
+            print('파일있음')
+        else:
+            setLabelText(self.progress_lbl, f'[에러 ??] { FILE_NAME } 파일을 찾을 수 없습니다.')
 
     def inserting(self):
         global FILE_NAME, NOT_SAVE
@@ -226,11 +251,7 @@ class WindowClass(QWidget, form_class):
                 new_tab_bar.table.setRowCount(row)
                 self.sheetlist.addTab(new_tab_bar, sheet_name)
             setLabelText(self.fileopen_lbl, name)
-            self.save_btn.setEnabled(True)
-            self.reload_btn.setEnabled(True)
-            self.filesave_btn.setEnabled(True)
-            self.delete_btn.setEnabled(True)
-            self.deleteall_btn.setEnabled(True)
+            self.buttonActive()
             msgBox = QMessageBox()
             msgBox.setWindowTitle('엑셀 파일 불러오기 성공')
             msgBox.setIcon(QMessageBox.NoIcon)
@@ -238,7 +259,7 @@ class WindowClass(QWidget, form_class):
             msgBox.setStandardButtons(QMessageBox.Yes)
             msgBox.setDefaultButton(QMessageBox.Yes)
             msgBox.exec_()
-            setLabelText(self.progress_lbl, '[완료] 파일을 성공적으로 열었습니다.')
+            setLabelText(self.progress_lbl, f'[완료] {FILE_NAME} 파일을 성공적으로 열었습니다.')
             self.progressOff()
             return True
 
@@ -347,15 +368,8 @@ class WindowClass(QWidget, form_class):
             msgBox.setDefaultButton(QMessageBox.Yes)
             msgBox.exec_()
             NOT_SAVE = False
-            setLabelText(self.progress_lbl, '[완료] 작업을 저장했습니다.')
+            setLabelText(self.progress_lbl, f'[완료] {FILE_NAME} 에 작업을 저장했습니다.')
         else:
-            msgBox = QMessageBox()
-            msgBox.setWindowTitle('파일 저장 실패')
-            msgBox.setIcon(QMessageBox.NoIcon)
-            msgBox.setText(save_file_name + ' 저장 실패했습니다.ㅠㅠ')
-            msgBox.setStandardButtons(QMessageBox.Yes)
-            msgBox.setDefaultButton(QMessageBox.Yes)
-            msgBox.exec_()
             setLabelText(self.progress_lbl, '[에러 ??] 파일 저장에 실패했습니다.')
         self.progressOff()
 
@@ -427,12 +441,9 @@ class WindowClass(QWidget, form_class):
                             stream_in >> input_str
                             widget = TableWidget(input_str.value(), pixmap=input_img)
                             self.sheetlist.widget(i).table.setCellWidget(r, c, widget)
-
-            self.save_btn.setEnabled(True)
-            self.deleteall_btn.setEnabled(True)
-            self.delete_btn.setEnabled(True)
-            self.reload_btn.setEnabled(True)
             load_file.close()
+            self.buttonActive()
+            setLabelText(self.progress_lbl, f'[완료] {load_file_name} 파일을 불러왔습니다.')
             msgBox = QMessageBox()
             msgBox.setWindowTitle('파일 로드 성공')
             msgBox.setIcon(QMessageBox.NoIcon)
@@ -440,15 +451,7 @@ class WindowClass(QWidget, form_class):
             msgBox.setStandardButtons(QMessageBox.Yes)
             msgBox.setDefaultButton(QMessageBox.Yes)
             msgBox.exec_()
-        else:
-            msgBox = QMessageBox()
-            msgBox.setWindowTitle('파일 로드 실패')
-            msgBox.setIcon(QMessageBox.NoIcon)
-            msgBox.setText(load_file_name + ' 을 불러오지 못 햇습니다.ㅠㅠ')
-            msgBox.setStandardButtons(QMessageBox.Yes)
-            msgBox.setDefaultButton(QMessageBox.Yes)
-            msgBox.exec_()
-            setLabelText(self.progress_lbl, '[에러 ??] 파일 로드에 실패했습니다.')
+
         NOT_SAVE = False
         self.progressOff()
 
