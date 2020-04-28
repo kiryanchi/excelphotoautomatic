@@ -15,6 +15,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SAVE_DIR = BASE_DIR + '\\Save'
 form_class = uic.loadUiType(BASE_DIR + '\\UI\\' + "my_form.ui")[0]
 FILE_NAME = 'default'
+NOT_SAVE = False
 
 
 def setLabelText(label, text):
@@ -78,11 +79,13 @@ class MyTable(QTableWidget):
         QApplication.clipboard().setText(image)
 
     def paste(self):
+        global NOT_SAVE
         image = QApplication.clipboard().text()
         r = self.currentRow()
         c = self.currentColumn()
         widget = TableWidget(image)
         self.setCellWidget(r, c, widget)
+        NOT_SAVE = True
 
     def dragEnterEvent(self, e):
         if e.mimeData().hasUrls:
@@ -97,6 +100,7 @@ class MyTable(QTableWidget):
             e.ignore()
 
     def dropEvent(self, e):
+        global NOT_SAVE
         e.setDropAction(QtCore.Qt.CopyAction)
         e.accept()
         if e.mimeData().hasUrls and FILE_NAME != "default":
@@ -107,6 +111,7 @@ class MyTable(QTableWidget):
                 row = self.currentRow()
                 col = self.currentColumn()
                 self.setCellWidget(row, col, widget)
+                NOT_SAVE = True
 
 
 class MyTabBar(QWidget):
@@ -142,6 +147,7 @@ class WindowClass(QWidget, form_class):
         self.deleteall_btn.clicked.connect(self.deleteall)
 
     def deleteall(self):
+        global NOT_SAVE
         msgBox = QMessageBox()
         msgBox.setWindowTitle('진짜 중요한 경고')
         msgBox.setIcon(QMessageBox.Critical)
@@ -158,22 +164,25 @@ class WindowClass(QWidget, form_class):
             for r in range(self.sheetlist.widget(tab_idx).table.rowCount()):
                 for c in range(self.sheetlist.widget(tab_idx).table.columnCount()):
                     self.sheetlist.widget(tab_idx).table.setCellWidget(r, c, widget)
+            NOT_SAVE = True
             self.progressOff()
 
     def delete(self):
+        global NOT_SAVE
         tab_idx = myWindow.sheetlist.currentIndex()
         r = self.sheetlist.widget(tab_idx).table.currentRow()
         c = self.sheetlist.widget(tab_idx).table.currentColumn()
         img = QPixmap()
         widget = TableWidget(None, pixmap=img)
         self.sheetlist.widget(tab_idx).table.setCellWidget(r, c, widget)
+        NOT_SAVE = True
 
     def insert(self):
         t = threading.Thread(target=self.inserting)
         t.start()
 
     def inserting(self):
-        global FILE_NAME
+        global FILE_NAME, NOT_SAVE
         self.progressOn()
         column_list = ['A', 'I', 'Q']
         for r in range(self.table.rowCount()):
@@ -184,6 +193,7 @@ class WindowClass(QWidget, form_class):
                     insertinexcel(imgname, column_list[c], row, self.sheet)
         self.wb.save(FILE_NAME)
         setLabelText(self.progress_lbl, '[완료] 엑셀에 사진을 넣었습니다.')
+        NOT_SAVE = False
         self.progressOff()
 
     def reload(self):
@@ -233,6 +243,16 @@ class WindowClass(QWidget, form_class):
             return True
 
     def openExcel(self):
+        global NOT_SAVE
+        if NOT_SAVE:
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle('저장 안 됨')
+            msgBox.setText('저장하지 않고 새 엑셀을 불러오겠습니까?')
+            msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            msgBox.setDefaultButton(QMessageBox.No)
+            if msgBox.exec_() == QMessageBox.No:
+                return
+
         setLabelText(self.progress_lbl, '[진행중] 파일을 여는 중...')
         self.progressOn()
         fname = QFileDialog.getOpenFileName(self, '엑셀 파일 선택', BASE_DIR, "Excel files (*.xlsx)")
@@ -253,7 +273,7 @@ class WindowClass(QWidget, form_class):
         순으로 저장됨.
         :return:
         """
-        global FILE_NAME
+        global FILE_NAME, NOT_SAVE
         filters = "xpa File (*.xpa);; xpae File (*.xpae)"
         setLabelText(self.progress_lbl, '[진행중] 작업을 저장중...')
         self.progressOn()
@@ -326,6 +346,7 @@ class WindowClass(QWidget, form_class):
             msgBox.setStandardButtons(QMessageBox.Yes)
             msgBox.setDefaultButton(QMessageBox.Yes)
             msgBox.exec_()
+            NOT_SAVE = False
             setLabelText(self.progress_lbl, '[완료] 작업을 저장했습니다.')
         else:
             msgBox = QMessageBox()
@@ -347,8 +368,16 @@ class WindowClass(QWidget, form_class):
             순으로 불러옴
             :return:
         """
-        global FILE_NAME, SAVE_DIR
+        global FILE_NAME, SAVE_DIR, NOT_SAVE
         self.progressOn()
+        if NOT_SAVE:
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle('저장 안 됨')
+            msgBox.setText('저장하지 않고 새 작업파일을 불러오겠습니까?')
+            msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            msgBox.setDefaultButton(QMessageBox.No)
+            if msgBox.exec_() == QMessageBox.No:
+                return
         filters = "xpa File (*.xpa);; xpae File (*.xpae)"
         load_file_name, _ = QFileDialog.getOpenFileName(self, '저장 파일 선택', BASE_DIR, filter=filters)
         # excel_name = FILE_NAME.split('/')[-1]
@@ -420,6 +449,7 @@ class WindowClass(QWidget, form_class):
             msgBox.setDefaultButton(QMessageBox.Yes)
             msgBox.exec_()
             setLabelText(self.progress_lbl, '[에러 ??] 파일 로드에 실패했습니다.')
+        NOT_SAVE = False
         self.progressOff()
 
     def progressOn(self):
