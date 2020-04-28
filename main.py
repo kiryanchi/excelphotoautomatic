@@ -1,11 +1,12 @@
 import sys
 import openpyxl
 from PyQt5.QtWidgets import QFileDialog, QApplication, QWidget, QLabel, QLayout, QHeaderView, QTableWidget, QVBoxLayout, \
-    QHBoxLayout, QAbstractItemView, QTabWidget
-from PyQt5.QtGui import QPixmap
+    QHBoxLayout, QAbstractItemView, QMessageBox, QAction, QShortcut
+from PyQt5.QtGui import QPixmap, QClipboard
 from PyQt5 import uic
 from PyQt5 import QtCore
 from PyQt5.QtCore import QFile, QIODevice, QDataStream, QVariant
+from PyQt5.QtGui import QKeySequence
 import threading
 from image.insert import insertinexcel
 import os
@@ -58,6 +59,32 @@ class MyTable(QTableWidget):
         self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.setHorizontalHeaderLabels(['작업 전', '작업 후', '전주 번호'])
 
+        copyShortcut = QShortcut(QKeySequence.Copy, self)
+        pasteShortcut = QShortcut(QKeySequence.Paste, self)
+
+        copyShortcut.activated.connect(self.copy)
+        pasteShortcut.activated.connect(self.paste)
+
+    def copy(self):
+        selectedRangeList = self.selectedRanges()
+        if not selectedRangeList:
+            return
+
+        r = self.currentRow()
+        c = self.currentColumn()
+        selectedPoint = self.cellWidget(r, c)
+        image = selectedPoint.imgpath
+
+        QApplication.clipboard().setText(image)
+
+    def paste(self):
+        image = QApplication.clipboard().text()
+        r = self.currentRow()
+        c = self.currentColumn()
+        widget = TableWidget(image)
+        self.setCellWidget(r, c, widget)
+
+
     def dragEnterEvent(self, e):
         if e.mimeData().hasUrls:
             e.accept()
@@ -77,12 +104,10 @@ class MyTable(QTableWidget):
             url = e.mimeData().urls()[0]
             url = str(url.toLocalFile())
             if url.split('.')[-1] == 'JPG' or url.split('.')[-1] == 'jpg':
-                tab_idx = myWindow.sheetlist.currentIndex()
-                current_tab = myWindow.sheetlist.tabText(tab_idx)
                 widget = TableWidget(url)
-                row = myWindow.sheetlist.widget(tab_idx).table.currentRow()
-                col = myWindow.sheetlist.widget(tab_idx).table.currentColumn()
-                myWindow.sheetlist.widget(tab_idx).table.setCellWidget(row, col, widget)
+                row = self.currentRow()
+                col = self.currentColumn()
+                self.setCellWidget(row, col, widget)
 
 
 class MyTabBar(QWidget):
@@ -118,14 +143,23 @@ class WindowClass(QWidget, form_class):
         self.deleteall_btn.clicked.connect(self.deleteall)
 
     def deleteall(self):
-        self.progressOn()
-        tab_idx = myWindow.sheetlist.currentIndex()
-        img = QPixmap()
-        widget = TableWidget(None, pixmap=img)
-        for r in range(self.sheetlist.widget(tab_idx).table.rowCount()):
-            for c in range(self.sheetlist.widget(tab_idx).table.columnCount()):
-                self.sheetlist.widget(tab_idx).table.setCellWidget(r, c, widget)
-        self.progressOff()
+        msgBox = QMessageBox()
+        msgBox.setWindowTitle('진짜 중요한 경고')
+        msgBox.setIcon(QMessageBox.Critical)
+        msgBox.setText('진짜 사진 다 지우겠습니까?')
+        msgBox.setInformativeText('진짜 다 지우나요?')
+        msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msgBox.setDefaultButton(QMessageBox.No)
+
+        if msgBox.exec_() == QMessageBox.Yes:
+            self.progressOn()
+            tab_idx = myWindow.sheetlist.currentIndex()
+            img = QPixmap()
+            widget = TableWidget(None, pixmap=img)
+            for r in range(self.sheetlist.widget(tab_idx).table.rowCount()):
+                for c in range(self.sheetlist.widget(tab_idx).table.columnCount()):
+                    self.sheetlist.widget(tab_idx).table.setCellWidget(r, c, widget)
+            self.progressOff()
 
     def delete(self):
         tab_idx = myWindow.sheetlist.currentIndex()
@@ -154,12 +188,14 @@ class WindowClass(QWidget, form_class):
         self.progressOff()
 
     def reload(self):
-        for r in range(self.table.rowCount()):
-            for c in range(self.table.columnCount()):
-                if self.table.cellWidget(r, c):
-                    imgpath = self.table.cellWidget(r, c).imgpath
+        tab_idx = myWindow.sheetlist.currentIndex()
+        for r in range(self.sheetlist.widget(tab_idx).table.rowCount()):
+            for c in range(self.sheetlist.widget(tab_idx).table.columnCount()):
+                if self.sheetlist.widget(tab_idx).table.cellWidget(r, c):
+                    imgpath = self.sheetlist.widget(tab_idx).table.cellWidget(r, c).imgpath
+                    print(self.sheetlist.widget(tab_idx).table.cellWidget(r, c))
                     widget = TableWidget(imgpath)
-                    self.table.setCellWidget(r, c, widget)
+                    self.sheetlist.widget(tab_idx).table.setCellWidget(r, c, widget)
 
     def loadExcel(self, fname):
         global FILE_NAME
@@ -186,6 +222,13 @@ class WindowClass(QWidget, form_class):
             self.filesave_btn.setEnabled(True)
             self.delete_btn.setEnabled(True)
             self.deleteall_btn.setEnabled(True)
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle('엑셀 파일 불러오기 성공')
+            msgBox.setIcon(QMessageBox.NoIcon)
+            msgBox.setText(name + ' 파일을 불러왔습니다.')
+            msgBox.setStandardButtons(QMessageBox.Yes)
+            msgBox.setDefaultButton(QMessageBox.Yes)
+            msgBox.exec_()
             setLabelText(self.progress_lbl, '[완료] 파일을 성공적으로 열었습니다.')
             self.progressOff()
             return True
@@ -207,7 +250,7 @@ class WindowClass(QWidget, form_class):
         파일이름 QVarient
             ㄴ 탭 갯수
             ㄴ 탭 이름 QVarient + row 갯수 + col 갯수
-                ㄴ 이미지정보 (xpa :  QVarient, xpae : QPixmap)
+                ㄴ 이미지정보 (xpa :  QVarient, xpae : QPixmap + QVariant)
         순으로 저장됨.
         :return:
         """
@@ -267,15 +310,32 @@ class WindowClass(QWidget, form_class):
                     for r in range(self.sheetlist.widget(i).table.rowCount()):
                         for c in range(self.sheetlist.widget(i).table.columnCount()):
                             if self.sheetlist.widget(i).table.cellWidget(r, c):
-                                output_str = QPixmap(self.sheetlist.widget(i).table.cellWidget(r, c).img)
+                                output_img = QPixmap(self.sheetlist.widget(i).table.cellWidget(r, c).img)
+                                stream_out << output_img
+                                output_str = QVariant(self.sheetlist.widget(i).table.cellWidget(r, c).imgpath)
                                 stream_out << output_str
                             else:
-                                output_str = QPixmap()
-                                print(r, c, output_str.isNull())
+                                output_img = QPixmap()
+                                stream_out << output_img
+                                output_str = QVariant('Null')
                                 stream_out << output_str
             save_file.close()
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle('파일 저장 성공')
+            msgBox.setIcon(QMessageBox.NoIcon)
+            msgBox.setText(save_file_name + ' 을 저장했습니다.')
+            msgBox.setStandardButtons(QMessageBox.Yes)
+            msgBox.setDefaultButton(QMessageBox.Yes)
+            msgBox.exec_()
             setLabelText(self.progress_lbl, '[완료] 작업을 저장했습니다.')
         else:
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle('파일 저장 실패')
+            msgBox.setIcon(QMessageBox.NoIcon)
+            msgBox.setText(save_file_name + ' 저장 실패했습니다.ㅠㅠ')
+            msgBox.setStandardButtons(QMessageBox.Yes)
+            msgBox.setDefaultButton(QMessageBox.Yes)
+            msgBox.exec_()
             setLabelText(self.progress_lbl, '[에러 ??] 파일 저장에 실패했습니다.')
         self.progressOff()
 
@@ -290,12 +350,12 @@ class WindowClass(QWidget, form_class):
         """
         global FILE_NAME, SAVE_DIR
         self.progressOn()
-        self.sheetlist.clear()
         filters = "xpa File (*.xpa);; xpae File (*.xpae)"
         load_file_name, _ = QFileDialog.getOpenFileName(self, '저장 파일 선택', BASE_DIR, filter=filters)
         # excel_name = FILE_NAME.split('/')[-1]
 
         if load_file_name:
+            self.sheetlist.clear()
             load_file = QFile(load_file_name)
             load_file.open(QIODevice.ReadOnly)
             stream_in = QDataStream(load_file)
@@ -335,7 +395,9 @@ class WindowClass(QWidget, form_class):
                         elif load_file_name.split('.')[1] == 'xpae':
                             input_img = QPixmap()
                             stream_in >> input_img
-                            widget = TableWidget(None, pixmap=input_img)
+                            input_str = QVariant()
+                            stream_in >> input_str
+                            widget = TableWidget(input_str.value(), pixmap=input_img)
                             self.sheetlist.widget(i).table.setCellWidget(r, c, widget)
 
             self.save_btn.setEnabled(True)
@@ -343,7 +405,21 @@ class WindowClass(QWidget, form_class):
             self.delete_btn.setEnabled(True)
             self.reload_btn.setEnabled(True)
             load_file.close()
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle('파일 로드 성공')
+            msgBox.setIcon(QMessageBox.NoIcon)
+            msgBox.setText(load_file_name + ' 을 불러왔습니다.')
+            msgBox.setStandardButtons(QMessageBox.Yes)
+            msgBox.setDefaultButton(QMessageBox.Yes)
+            msgBox.exec_()
         else:
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle('파일 로드 실패')
+            msgBox.setIcon(QMessageBox.NoIcon)
+            msgBox.setText(load_file_name + ' 을 불러오지 못 햇습니다.ㅠㅠ')
+            msgBox.setStandardButtons(QMessageBox.Yes)
+            msgBox.setDefaultButton(QMessageBox.Yes)
+            msgBox.exec_()
             setLabelText(self.progress_lbl, '[에러 ??] 파일 로드에 실패했습니다.')
         self.progressOff()
 
