@@ -79,7 +79,7 @@
      <item row="0" column="0">
       <widget class="QPushButton" name="load_btn">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="text">
         <string>작업 불러오기 (L)</string>

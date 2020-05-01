@@ -162,6 +162,7 @@ class WindowClass(QWidget, form_class):
         self.filesave_btn.setEnabled(True)
         self.delete_btn.setEnabled(True)
         self.deleteall_btn.setEnabled(True)
+        self.load_btn.setEnabled(True)
         # self.scaleup_btn.setEnabled(True)
         # self.scaledown_btn.setEnabled(True)
 
@@ -396,14 +397,28 @@ class WindowClass(QWidget, form_class):
         load_file_name, _ = QFileDialog.getOpenFileName(self, '저장 파일 선택', BASE_DIR, filter=filters)
         # excel_name = FILE_NAME.split('/')[-1]
 
+        # 순수하게 *.xlsx 파일만 남기기 위해 작업
+        excel_name = FILE_NAME.split('/')[-1]
+        excel_name = excel_name.split("\\")[-1]
+
         if load_file_name:
-            self.sheetlist.clear()
             load_file = QFile(load_file_name)
             load_file.open(QIODevice.ReadOnly)
             stream_in = QDataStream(load_file)
             file_name = QVariant()
             stream_in >> file_name
             print('로드 파일명: ' + file_name.value())
+            # xpa 의 엑셀 파일이름과 설정한 엑셀 파일이름이 다를 경우
+            if file_name.value() != excel_name:
+                msgBox = QMessageBox()
+                msgBox.setWindowTitle('에러')
+                msgBox.setIcon(QMessageBox.NoIcon)
+                msgBox.setText('저장 파일이 엑셀 파일의 저장이 아닙니다.')
+                msgBox.setStandardButtons(QMessageBox.Yes)
+                msgBox.setDefaultButton(QMessageBox.Yes)
+                msgBox.exec_()
+                setLabelText(self.progress_lbl, f'[에러] 저장 파일이 이 엑셀 파일의 저장이 아닙니다.')
+                return
             # 파일 확장자가 xlsx가 아닐 경우 에러를 뿜뿜
             if file_name.value().split('.')[-1] != 'xlsx':
                 print('파일이 xlsx가 아님')

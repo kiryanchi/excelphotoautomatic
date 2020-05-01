@@ -12,3 +12,5 @@ test_my_form.*
 UI/test.*
 UI/*.py
 *.xlsx
+*.xpa
+*.xpae
