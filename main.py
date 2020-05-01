@@ -136,6 +136,7 @@ class WindowClass(QWidget, form_class):
     table = None
     wb = None
     sheet = None
+    sheet_list = []
 
     def __init__(self):
         super().__init__()
@@ -203,20 +204,22 @@ class WindowClass(QWidget, form_class):
         if os.path.isfile(FILE_NAME):
             t = threading.Thread(target=self.inserting)
             t.start()
-            print('파일있음')
         else:
             setLabelText(self.progress_lbl, f'[에러 ??] { FILE_NAME } 파일을 찾을 수 없습니다.')
 
     def inserting(self):
         global FILE_NAME, NOT_SAVE
         self.progressOn()
-        column_list = ['A', 'I', 'Q']
-        for r in range(self.table.rowCount()):
-            for c in range(self.table.columnCount()):
-                if self.table.cellWidget(r, c):
-                    row = 19 * r + 2
-                    imgname = self.table.cellWidget(r, c).imgpath
-                    insertinexcel(imgname, column_list[c], row, self.sheet)
+        for tab_idx, sheet_name in enumerate(self.sheet_list):
+            sheet = self.wb[sheet_name]
+            column_list = ['A', 'I', 'Q']
+            for r in range(self.sheetlist.widget(tab_idx).table.rowCount()):
+                for c in range(self.sheetlist.widget(tab_idx).table.columnCount()):
+                    if self.sheetlist.widget(tab_idx).table.cellWidget(r, c):
+                        row = 19 * r + 2
+                        imgname = self.sheetlist.widget(tab_idx).table.cellWidget(r, c).imgpath
+                        print(tab_idx, r, c, imgname)
+                        insertinexcel(imgname, column_list[c], row, sheet)
         self.wb.save(FILE_NAME)
         setLabelText(self.progress_lbl, '[완료] 엑셀에 사진을 넣었습니다.')
         NOT_SAVE = False
@@ -226,9 +229,9 @@ class WindowClass(QWidget, form_class):
         tab_idx = myWindow.sheetlist.currentIndex()
         for r in range(self.sheetlist.widget(tab_idx).table.rowCount()):
             for c in range(self.sheetlist.widget(tab_idx).table.columnCount()):
-                if self.sheetlist.widget(tab_idx).table.cellWidget(r, c):
+                if self.sheetlist.widget(tab_idx).table.cellWidget(r, c).imgpath:
                     imgpath = self.sheetlist.widget(tab_idx).table.cellWidget(r, c).imgpath
-                    print(self.sheetlist.widget(tab_idx).table.cellWidget(r, c))
+                    print(tab_idx, imgpath)
                     widget = TableWidget(imgpath)
                     self.sheetlist.widget(tab_idx).table.setCellWidget(r, c, widget)
 
@@ -245,6 +248,10 @@ class WindowClass(QWidget, form_class):
             self.progressOff()
         else:
             name_list = self.wb.sheetnames
+            if '표지' in name_list:
+                name_list.remove('표지')
+            print(name_list)
+            self.sheet_list = name_list
             for sheet_name in name_list:
                 sheet = self.wb[sheet_name]
                 row = (sheet.max_row - 1) // 19
@@ -423,6 +430,7 @@ class WindowClass(QWidget, form_class):
             if file_name.value().split('.')[-1] != 'xlsx':
                 print('파일이 xlsx가 아님')
                 return
+            self.sheetlist.clear()
             FILE_NAME = BASE_DIR + '\\' + file_name.value()
             setLabelText(self.fileopen_lbl, file_name.value())
             print(FILE_NAME)

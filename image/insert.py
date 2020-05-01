@@ -9,6 +9,7 @@ FIXED_SIZE = (515.527559055, 335.622047244)
 
 def insertinexcel(img_name, column, row, sheet):
     try:
+        print(img_name)
         img = Image(img_name)
     except FileNotFoundError:
         return '[에러 3] 사진을 찾을 수 없습니다.'
